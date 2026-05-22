@@ -1,166 +1,225 @@
 <!DOCTYPE html>
-
+<html lang="ja">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>終活診断：デジタル遺産編</title>
+    <title>ゆるスイカゲーム 体操レク版</title>
+
     <style>
-        body {
-            background-color: #ffffff;
-            color: #333;
-            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", Meiryo, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .container {
-            width: 90%;
-            max-width: 600px;
-            text-align: center;
-            padding: 40px 20px;
-        }
-        h1 { font-size: 1.5rem; margin-bottom: 30px; color: #2c3e50; }
-        .question-card {
-            display: none; /* 順番に表示 */
-            border: 1px solid #eee;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-        .question-card.active { display: block; }
-        .btn-group { margin-top: 20px; display: flex; justify-content: center; gap: 15px; }
-        button {
-            padding: 10px 30px;
-            font-size: 1rem;
-            cursor: pointer;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            background: #fff;
-            transition: 0.3s;
-        }
-        button:hover { background: #f0f0f0; }
-        .yes-btn { border-color: #27ae60; color: #27ae60; }
-        .no-btn { border-color: #e74c3c; color: #e74c3c; }
-        
-        .advice-box {
-            margin-top: 20px;
+        /* --- 1. ページ全体の設定（最大幅800px・中央寄せ） --- */
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            background: #f9f9f9; 
+            margin: 0 auto;       /* 左右中央寄せ */
             padding: 15px;
-            background: #f9f9f9;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            text-align: left;
-            display: none;
+            max-width: 800px;     /* 全体の幅を800pxに制限 */
+            box-sizing: border-box;
+            overflow-x: hidden;   /* 横揺れ防止 */
         }
-        #result-area { display: none; }
-        .score { font-size: 2rem; font-weight: bold; margin: 20px 0; }
-        .gauge { height: 10px; width: 100%; background: #eee; border-radius: 5px; overflow: hidden; margin-bottom: 20px; }
-        .gauge-bar { height: 100%; background: #27ae60; width: 0%; transition: 1s; }
+
+        /* --- 2. 画像の強制リサイズ（800pxからはみ出さない・中央寄せ） --- */
+        img {
+            max-width: 100% !important; /* 親の幅（最大800px）を超えない */
+            height: auto !important;    /* 比率を維持 */
+            display: block;
+            margin: 0 auto 20px auto;   /* 中央寄せ＆下の余白 */
+        }
+
+        /* --- 3. ゲーム・要素のスタイル --- */
+        canvas {
+            border: 4px solid #eee;
+            border-radius: 10px;
+            background: #fff;
+            max-width: 100%;      /* 800pxの枠内に収める */
+            height: auto;         /* 比率を維持 */
+            display: block;
+            margin: 0 auto;       /* Canvasを中央寄せ */
+        }
+
+        #score {
+            font-size: 28px;
+            margin: 10px;
+            color: #ff9f1c;
+            font-weight: bold;
+        }
+
+        #timer {
+            font-size: 22px;
+            margin: 6px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        #exerciseText {
+            font-size: 18px;
+        }
+
+        #exercise {
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        /* ボタン設定 */
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        #startBtn{background:#ff9f1c;color:white;}
+        #stopGameBtn{background:#333;color:white;}
+        #dropBtn{background:#ff4b4b;color:white;}
+        #modeBtn{background:#1982c4;color:white;}
+        #randomBtn{background:#8ac926;color:white;}
+        #stopBtn{background:#6c757d;color:white;}
+        #resetBtn{background:#ff6f91;color:white;}
+        
+        button:active { opacity: 0.8; transform: scale(0.95); }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .slider { width: 80%; max-width: 300px; }
+
+        /* --- 4. スマホ用レスポンシブ設定 --- */
+        @media (max-width: 800px) {
+            body { padding: 10px; }
+            button { font-size: 14px; padding: 10px 12px; }
+            .choice-buttons { gap: 5px; }
+        }
     </style>
+</head>
+<body>
 
+<img src="https://life-supporter.jp/sp/hxySQ4ff/ct5NJq8Z/images/XS012099.jpg" alt="タイトル画像">
 
+<h2>簡単体操とゆるスイカゲーム</h2>
 
-<div class="container">
-    <div id="quiz-section">
-        <h1 id="category-title">終活診断：デジタル遺産編</h1>
-        <div id="question-container">
-            </div>
+<div id="score">Score:0</div>
+
+<canvas id="world"></canvas>
+
+<div id="exercise">
+    <div id="timer">残り時間:0:00</div>
+    <p id="exerciseText">通常・自動モード／順番・ランダムモードを選択してスタートを押してください</p>
+
+    <div id="buttons" style="margin-top:10px;">
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+            <button id="startBtn" onclick="startGame()">スタート</button>
+            <button id="stopGameBtn" onclick="stopGame()">ストップ</button>
+        </div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+            <button id="resetBtn" onclick="resetGame()">ゲームリセット</button>
+            <button id="stopBtn" onclick="toggleStop()">一時停止</button>
+        </div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:6px;">
+            <button id="dropBtn" onclick="dropAction()" disabled style="width: 200px;">落とす</button>
+        </div>
+        <div style="display:flex;justify-content:center;gap:10px;margin-bottom:6px;flex-wrap:wrap;">
+            <button id="modeBtn" onclick="toggleMode()">通常モード</button>
+            <button id="randomBtn" onclick="toggleRandom()">順番モード</button>
+        </div>
     </div>
 
-    <div id="result-area">
-        <h1>診断結果</h1>
-        <div class="gauge"><div id="gauge-bar" class="gauge-bar"></div></div>
-        <div id="score-text" class="score"></div>
-        <div id="evaluation-text" style="font-weight: bold; margin-bottom: 20px;"></div>
-        <p id="total-advice"><br></p>
-        <button onclick="location.reload()">もう一度診断する</button>
+    <br>
+    体操時間（分）<br>
+    <input id="timeSlider" type="number" min="1" max="60" step="1" value="10" class="slider">
+    <br>
+    <span id="timeValue">10分</span>
+
+    <br><br>
+    音声スピード<br>
+    <input id="speedSlider" type="range" min="0.6" max="2.0" step="0.1" value="1.0" class="slider">
+
+    <br><br>
+    <div style="font-size:18px;line-height:1.6;text-align:left;max-width:500px;margin:auto;padding: 0 10px;">
+        このゲームは、体操をしながら楽しめるレクリエーションゲームです。簡単な体操を15個用意しました。<br><br>
+        思い思いに体を動かしてください。イメージした動きを自分なりに動かしてみましょう。またグループでしたら形を合わせて体操するのもいいですね。<br><br>
+        音声で次の体操が案内され、回数も読み上げられます。<br>
+        体操が終わったら「落とす」ボタンを押すと、果物が落ちてゲームが進みます。<br><br>
+        同じ果物がぶつかると合体して大きくなり、スコアが増えます。
     </div>
 </div>
 
+  <div class="footer-info">
+    <div class="info-text">
+     今回のアプリは如何だったでしょうか？他にも使えるアプリ、脳トレができるゲームや趣味に俳句、和歌などが利用できるサイトをご案内します。また大事な記録をサーバーに残せるサイトで、何かあった時に情報開示も指定できるサイトです。スマホのID、PWを記録しておくと安心です。
+    </div>
+    <img src="https://life-supporter.jp/sp/hxySQ4ff/8BaRR2j8/images/XS012098.jpg" style="display:block; margin:20px auto; max-width:100%;">
+    <div style="text-align:center;"><span style="font-size:18px;"><b></b></span></div>
+  </div>
+<p></p>  
+
+<p></p>    
+<!-- 14日体験案内-->  
+  <input type="file" id="jsonFile" style="display:none">
+  <input type="file" id="excelFile" style="display:none" accept=".xlsx,.xls">
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.19.0/build/matter.min.js"></script>
 <script>
-const quizData = [
-    { q: "スマホのロック解除パスワードを、信頼できる家族に共有していますか？", a: "万が一の際、スマホが開けないと連絡先も写真も確認できません。紙に書いて金庫に入れるか、スマホの『故人アカウント管理設定』を使いましょう。" },
-    { q: "ネット銀行や証券会社の『リスト』を作成していますか？", a: "通帳がない口座は、遺族が見落とす可能性が非常に高いです。金融機関名だけでもエンディングノートに書き留めましょう。" },
-    { q: "月額課金（サブスク）しているサービスを把握していますか？", a: "亡くなった後もカードから引き落とされ続けるリスクがあります。アプリや動画配信サービスなどのリスト化を。" },
-    { q: "SNS（LINE, Facebook等）のアカウントをどうしたいか決めていますか？", a: "放置すると乗っ取りのリスクも。Facebookの追悼アカウント設定などを確認しておきましょう。" },
-    { q: "パソコンにログインするためのPWを家族が知る手段はありますか？", a: "仕事の資料や大切なデータが入っている場合、業者に頼むと高額な費用がかかることがあります。" },
-    { q: "暗号資産（仮想通貨）やNFTを所有していますか？（NOなら次へ）", a: "これらはPW（秘密鍵）を紛失すると二度と取り出せません。最も紛失リスクが高いデジタル資産です。" },
-    { q: "クラウド（GoogleフォトやiCloud）に大切な写真を保存していますか？", a: "家族がアクセスできるよう、共有設定や遺された人向けのアクセス権設定を行いましょう。" },
-    { q: "人に見られたくない『秘密のデータ』の処理を決めていますか？", a: "見られたくないものは死後に自動消去するソフトを使うか、場所を特定されない工夫が必要です。" },
-    { q: "主要なログインIDとPWを一つの場所にまとめて管理していますか？", a: "パスワード管理アプリや、1つのマスターキーで開く物理的なノートでの管理が推奨されます。" },
-    { q: "キャッシュレス決済（PayPay、モバイルSuica等）の残高はありますか？", a: "少額でも数が増えると大きな額に。家族が払い戻し手続きを知っているか確認しましょう。" }
-];
+// --- ゲームロジック（変更なし） ---
+const {Engine,Render,World,Bodies,Events}=Matter;
+const engine=Engine.create();
+const world=engine.world;
 
-let currentIdx = 0;
-let score = 0;
+const render=Render.create({
+  canvas:document.getElementById("world"),
+  engine:engine,
+  options:{width:320,height:450,wireframes:false,background:"#fff"}
+});
 
-const qContainer = document.getElementById('question-container');
+Engine.run(engine);
+Render.run(render);
 
-function showQuestion() {
-    qContainer.innerHTML = `
-        <div class="question-card active">
-            <p>第 ${currentIdx + 1} 問 / 10</p>
-            <p style="font-size: 1.2rem; font-weight: bold;">${quizData[currentIdx].q}</p>
-            <div class="btn-group">
-                <button class="yes-btn" onclick="handleAnswer(true)">はい (YES)</button>
-                <button class="no-btn" onclick="handleAnswer(false)">いいえ (NO)</button>
-            </div>
-            <div id="advice-${currentIdx}" class="advice-box">
-                <strong>アドバイス：</strong><br>${quizData[currentIdx].a}
-                <br><button onclick="nextQuestion()" style="margin-top:10px; width:100%;">次へ進む</button>
-            </div>
-        </div>
-    `;
-}
+World.add(world,[
+  Bodies.rectangle(160,450,320,40,{isStatic:true}),
+  Bodies.rectangle(0,225,40,450,{isStatic:true}),
+  Bodies.rectangle(320,225,40,450,{isStatic:true})
+]);
 
-function handleAnswer(isYes) {
-    if (isYes) score++;
-    const adviceBox = document.getElementById(`advice-${currentIdx}`);
-    adviceBox.style.display = 'block';
-    // ボタンを無効化して連打防止
-    const btns = document.querySelectorAll('button');
-    btns[0].disabled = true;
-    btns[1].disabled = true;
-}
+const exercises=["かかと上げ10回","肩回し10回","足踏み15回","手を上げて背筋を伸ばす10回","首の横倒し左右10回","足首くるくる左10回","足首くるくる右10回","グーパー運動20回","胸を広げ閉じる10回","首回し10回","手振り足踏み10回","手を腰に上を見る10回","手ぶらぶら20回","腕左右振り10回","足屈伸10回"];
+const lastExercise="深呼吸5回";
+let exerciseList=[]; let exerciseIndex=0; let score=0; let autoMode=false; let randomMode=false; let isPaused=false; let voiceSpeed=1.0; let gameRunning=false; let timerMinutes=10; let timeLeft=0; let timerInterval=null; let wakeLock=null;
 
-function nextQuestion() {
-    currentIdx++;
-    if (currentIdx < quizData.length) {
-        showQuestion();
-    } else {
-        showResult();
-    }
-}
+const scoreDiv=document.getElementById("score");
+const dropBtn=document.getElementById("dropBtn");
+const modeBtn=document.getElementById("modeBtn");
+const randomBtn=document.getElementById("randomBtn");
+const stopBtn=document.getElementById("stopBtn");
+const slider=document.getElementById("speedSlider");
+const timeSlider=document.getElementById("timeSlider");
+const timeValue=document.getElementById("timeValue");
 
-function showResult() {
-    document.getElementById('quiz-section').style.display = 'none';
-    const resultArea = document.getElementById('result-area');
-    resultArea.style.display = 'block';
+slider.addEventListener("input",function(){voiceSpeed=parseFloat(this.value);});
+timeSlider.addEventListener("input",function(){timerMinutes=parseInt(this.value);timeValue.innerText=timerMinutes+"分";});
 
-    const scorePct = (score / quizData.length) * 100;
-    document.getElementById('gauge-bar').style.width = scorePct + '%';
-    document.getElementById('score-text').innerText = `あなたの安心度：${scorePct}点`;
-
-    let eval = "";
-    let totalAdvice = "";
-
-    if (score >= 8) {
-        eval = "【安心レベル：高】";
-        totalAdvice = "素晴らしいです！デジタル遺産の管理がほぼ完璧です。定期的にパスワードの更新や、リストの最新化を行いましょう。";
-    } else if (score >= 5) {
-        eval = "【危険レベル：中】";
-        totalAdvice = "半分程度は準備できていますが、まだ漏れがあります。特に『お金』に直結するネット銀行やサブスクの整理から始めましょう。";
-    } else {
-        eval = "【危険レベル：高】";
-        totalAdvice = "今すぐ対策が必要です。まずはスマホのパスワードをどう家族に伝えるか、そこから第一歩を踏み出しましょう。";
-    }
-
-    document.getElementById('evaluation-text').innerText = eval;
-    document.getElementById('total-advice').innerText = totalAdvice;
-}
-
-showQuestion();
+async function keepAwake(){if("wakeLock" in navigator){try{wakeLock=await navigator.wakeLock.request("screen");}catch(e){console.log(e);}}}
+function releaseWakeLock(){if(wakeLock){wakeLock.release();wakeLock=null;}}
+function shuffle(array){for(let i=array.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[array[i],array[j]]=[array[j],array[i]];}return array;}
+function prepareExercises(){if(randomMode){exerciseList=shuffle([...exercises]);}else{exerciseList=[...exercises];}exerciseList.push(lastExercise);exerciseIndex=0;}
+function toggleMode(){autoMode=!autoMode;modeBtn.innerText=autoMode?"自動モード":"通常モード";}
+function toggleRandom(){randomMode=!randomMode;randomBtn.innerText=randomMode?"ランダムモード":"順番モード";prepareExercises();}
+function updateScore(){scoreDiv.innerText="Score:"+score;}
+function speak(text){return new Promise(resolve=>{if(!window.speechSynthesis){resolve();return;}const u=new SpeechSynthesisUtterance(text);u.lang="ja-JP";u.rate=voiceSpeed;u.onend=async ()=>{while(isPaused){await new Promise(r=>setTimeout(r,100));}resolve();};speechSynthesis.speak(u);});}
+function startTimer(){timeLeft=timerMinutes*60;updateTimer();timerInterval=setInterval(()=>{timeLeft--;updateTimer();if(timeLeft<=0){clearInterval(timerInterval);finishGame();}},1000);}
+function updateTimer(){let m=Math.floor(timeLeft/60);let s=timeLeft%60;document.getElementById("timer").innerText="残り時間:"+m+":"+(s<10?"0"+s:s);}
+async function finishGame(){stopGame();await speak("終了しました。お疲れ様です。");}
+function toggleStop(){isPaused=!isPaused;if(isPaused){speechSynthesis.pause();stopBtn.innerText="一時停止中（解除）";}else{speechSynthesis.resume();stopBtn.innerText="一時停止";}}
+function stopGame(){clearInterval(timerInterval);releaseWakeLock();speechSynthesis.cancel();exerciseIndex=0;gameRunning=false;document.getElementById("exerciseText").innerText="スタートを押してください";dropBtn.disabled=true;}
+async function nextExercise(){if(!gameRunning) return;if(exerciseIndex>=exerciseList.length){prepareExercises();}const text=exerciseList[exerciseIndex];exerciseIndex++;document.getElementById("exerciseText").innerText=text;dropBtn.disabled=true;await speak("次は "+text+" です");let m=text.match(/(\d+)/);if(m){let max=parseInt(m[1]);for(let i=1;i<=max;i++){await speak(i);await new Promise(r=>setTimeout(r,700/voiceSpeed));}}await speak("はいオッケーです");if(autoMode){setTimeout(()=>{dropAction();},800);}else{await speak("落とすボタンを押してください");dropBtn.disabled=false;}}
+function dropAction(){if(!gameRunning) return;const x=160+(Math.random()*40-20);World.add(world,createFruit(x,0));dropBtn.disabled=true;setTimeout(nextExercise,1200);}
+function createFruit(x,level){const data=[{r:16,c:"#ff595e"},{r:22,c:"#ffca3a"},{r:30,c:"#8ac926"},{r:40,c:"#1982c4"},{r:55,c:"#6ab04c"}];return Bodies.circle(x,30,data[level].r,{restitution:0.3,friction:0.1,label:"fruit_"+level,render:{fillStyle:data[level].c}});}
+Events.on(engine,"collisionStart",event=>{event.pairs.forEach(pair=>{const a=pair.bodyA;const b=pair.bodyB;if(a.label===b.label && a.label.startsWith("fruit_")){const level=Number(a.label.split("_")[1]);World.remove(world,[a,b]);if(level<4){World.add(world,createFruit((a.position.x+b.position.x)/2,level+1));score+=(level+1)*2;updateScore();}}});});
+function startGame(){if(gameRunning) return;gameRunning=true;keepAwake();prepareExercises();nextExercise();updateScore();startTimer();}
+function resetGame(){if(gameRunning) return;World.clear(world,false);World.add(world,[Bodies.rectangle(160,450,320,40,{isStatic:true}),Bodies.rectangle(0,225,40,450,{isStatic:true}),Bodies.rectangle(320,225,40,450,{isStatic:true})]);score=0;updateScore();document.getElementById("exerciseText").innerText="スタートを押してください";}
 </script>
 
-
+</body>
+</html>
